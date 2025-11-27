@@ -11,7 +11,7 @@ COPY branding/ /app/branding/
 
 # Copy customization script
 COPY scripts/apply-whitelabel.sh /tmp/apply-whitelabel.sh
-RUN chmod +x /tmp/apply-whitelabel.sh
+RUN sed -i 's/\r$//' /tmp/apply-whitelabel.sh && chmod +x /tmp/apply-whitelabel.sh
 
 # Apply white-label customizations
 ARG BRAND_NAME="Nexa Inbox"
@@ -43,8 +43,8 @@ COPY --from=builder /app /app
 
 # Remove unnecessary files
 RUN rm -rf /app/branding \
-           /app/scripts/apply-whitelabel.sh \
-           /tmp/*
+    /app/scripts/apply-whitelabel.sh \
+    /tmp/*
 
 # Expose port
 EXPOSE 3000
