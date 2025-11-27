@@ -1,0 +1,7 @@
+# Brand configuration (loaded via ENV)
+name: Nexa Inbox
+tagline: AI-Powered Customer Support
+support_email: support@nexateam.com.br
+website_url: https://nexateam.com.br
+primary_color: "#1f93ff"
+secondary_color: "#4ecdc4"

@@ -1,0 +1,48 @@
+name: Build and Push Custom Chatwoot
+
+on:
+  push:
+    branches: [ "main", "master" ]
+    paths:
+      - 'whitelabel-build/**'
+      - '.github/workflows/build-and-push.yml'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Chatwoot Version (e.g. v3.15.0)'
+        required: true
+        default: 'v3.15.0'
+
+env:
+  IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/chatwoot-custom
+  BRAND_NAME: "Nexa Inbox" # Pode ser movido para secrets se quiser dinâmico
+  PRIMARY_COLOR: "#1f93ff"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: whitelabel-build/Dockerfile.custom
+          push: true
+          tags: |
+            ${{ env.IMAGE_NAME }}:${{ inputs.version || 'v3.15.0' }}
+            ${{ env.IMAGE_NAME }}:latest
+          build-args: |
+            BRAND_NAME=${{ env.BRAND_NAME }}
+            PRIMARY_COLOR=${{ env.PRIMARY_COLOR }}

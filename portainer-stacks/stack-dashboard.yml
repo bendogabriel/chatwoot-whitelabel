@@ -1,0 +1,88 @@
+version: "3.7"
+
+# ============================================
+# DASHBOARD - Analytics & Metrics
+# ============================================
+# Dashboard unificado com métricas de:
+# - Atlas Nexa (leads, qualificação)
+# - Chatwoot (conversas, agentes)
+# - Funil completo (bot → humano)
+#
+# VARIÁVEIS OPCIONAIS:
+# - DASHBOARD_DOMAIN (ex: "dashboard.nexateam.com.br")
+# ============================================
+
+services:
+  dashboard:
+    image: ${DASHBOARD_IMAGE:-nexateam/nexa-dashboard:latest}
+    networks:
+      - minha_rede
+    environment:
+      # Database connections (read-only)
+      - CHATWOOT_DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD:-KEqXBMXMU4sC44UV}@postgres:5432/chatwoot
+      - ATLAS_DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD:-KEqXBMXMU4sC44UV}@postgres:5432/atlas_nexa
+
+      # API access
+      - CHATWOOT_API_URL=https://${CHATWOOT_DOMAIN:-chatwoot.nexateam.com.br}/api/v1
+      - CHATWOOT_API_TOKEN=${CHATWOOT_API_TOKEN}
+      - ATLAS_API_URL=http://atlas_nexa:4000
+
+      # Branding
+      - BRAND_NAME=${BRAND_NAME:-Nexa Inbox}
+      - BRAND_LOGO_URL=${BRAND_LOGO_URL}
+      - PRIMARY_COLOR=${BRAND_PRIMARY_COLOR:-#1f93ff}
+
+      # Authentication (opcional, para proteger dashboard)
+      - JWT_SECRET=${DASHBOARD_JWT_SECRET}
+      - SESSION_SECRET=${DASHBOARD_SESSION_SECRET}
+
+      # Timezone
+      - TZ=America/Sao_Paulo
+
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+      labels:
+        - traefik.enable=true
+        - traefik.docker.network=minha_rede
+
+        # HTTPS Router
+        - traefik.http.routers.dashboard.rule=Host(`${DASHBOARD_DOMAIN:-dashboard.nexateam.com.br}`)
+        - traefik.http.routers.dashboard.entrypoints=websecure
+        - traefik.http.routers.dashboard.tls=true
+        - traefik.http.routers.dashboard.tls.certresolver=le
+
+        # Service
+        - traefik.http.routers.dashboard.service=dashboard
+        - traefik.http.services.dashboard.loadbalancer.server.port=5000
+
+networks:
+  minha_rede:
+    external: true
+    name: minha_rede
+
+# ============================================
+# COMO USAR:
+# ============================================
+# 1. Portainer → Stacks → Add Stack
+# 2. Name: dashboard
+# 3. Web editor: colar este conteúdo
+# 4. Environment variables (opcional):
+#    DASHBOARD_DOMAIN=dashboard.cliente.com
+#    BRAND_NAME=Cliente ABC
+# 5. Deploy the stack
+#
+# ACESSO:
+# https://dashboard.nexateam.com.br
+#
+# NOTA: Se não tiver a imagem custom do dashboard,
+# pode deixar sem fazer deploy por enquanto
+# (não é crítico para funcionamento)
+# ============================================

@@ -1,0 +1,109 @@
+version: "3.7"
+
+# ============================================
+# N8N - Workflow Automation
+# ============================================
+# Automação de workflows para:
+# - Handoff Atlas → Chatwoot
+# - Sync bidirecional de dados
+# - Webhooks e integrações
+#
+# VARIÁVEIS OPCIONAIS:
+# - N8N_DOMAIN (ex: "n8n.nexateam.com.br")
+# - N8N_ENCRYPTION_KEY (auto-gerado se não informar)
+# ============================================
+
+services:
+  n8n:
+    image: n8nio/n8n:latest
+    networks:
+      - minha_rede
+    volumes:
+      - n8n_data:/home/node/.n8n
+    environment:
+      # Host
+      - N8N_HOST=${N8N_DOMAIN:-n8n.nexateam.com.br}
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=https
+      - WEBHOOK_URL=https://${N8N_DOMAIN:-n8n.nexateam.com.br}
+
+      # Database (opcional, para persistir workflows)
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=n8n
+      - DB_POSTGRESDB_USER=postgres
+      - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD:-KEqXBMXMU4sC44UV}
+
+      # Encryption
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
+
+      # Timezone
+      - GENERIC_TIMEZONE=America/Sao_Paulo
+      - TZ=America/Sao_Paulo
+
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: "1"
+          memory: 1024M
+      labels:
+        - traefik.enable=true
+        - traefik.docker.network=minha_rede
+
+        # HTTPS Router
+        - traefik.http.routers.n8n.rule=Host(`${N8N_DOMAIN:-n8n.nexateam.com.br}`)
+        - traefik.http.routers.n8n.entrypoints=websecure
+        - traefik.http.routers.n8n.tls=true
+        - traefik.http.routers.n8n.tls.certresolver=le
+
+        # Service
+        - traefik.http.routers.n8n.service=n8n
+        - traefik.http.services.n8n.loadbalancer.server.port=5678
+
+volumes:
+  n8n_data:
+    external: true
+    name: n8n_data
+
+networks:
+  minha_rede:
+    external: true
+    name: minha_rede
+
+# ============================================
+# IMPORTANTE - CRIAR DATABASE (PRIMEIRA VEZ):
+# ============================================
+# SSH no servidor:
+# docker exec -it <postgres_container> psql -U postgres
+# CREATE DATABASE n8n;
+# \q
+#
+# Ou via Portainer:
+# Postgres container → Console → psql -U postgres
+# CREATE DATABASE n8n;
+#
+# ============================================
+# COMO USAR:
+# ============================================
+# 1. Portainer → Stacks → Add Stack
+# 2. Name: n8n
+# 3. Web editor: colar este conteúdo
+# 4. Environment variables (opcional):
+#    N8N_DOMAIN=n8n.cliente.com
+# 5. Deploy the stack
+#
+# PRIMEIRO ACESSO:
+# https://n8n.nexateam.com.br
+# - Criar conta de owner (primeira vez)
+# - Importar workflows (vou te passar)
+#
+# OPCIONAL: N8N é necessário apenas se quiser
+# automação avançada. Pode deixar sem deploy
+# por enquanto e integrar depois.
+# ============================================

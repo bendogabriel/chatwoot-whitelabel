@@ -1,0 +1,95 @@
+# Example Client Configuration
+# This is a sample - copy and customize for real clients
+
+client:
+  id: example-corp
+  name: "Example Corporation"
+  domain: example-corp.com
+  contact:
+    name: "John Smith"
+    email: "john@example-corp.com"
+    phone: "+55 11 98765-4321"
+
+branding:
+  name: "Example Support"
+  tagline: "AI-Powered Customer Experience"
+  logo:
+    url: "https://example-corp.com/assets/logo.svg"
+    favicon: "https://example-corp.com/favicon.ico"
+    thumbnail: "https://example-corp.com/assets/logo-thumb.png"
+  colors:
+    primary: "#2563eb"
+    secondary: "#7c3aed"
+    success: "#10b981"
+    danger: "#ef4444"
+    warning: "#f59e0b"
+  social:
+    website: "https://example-corp.com"
+    linkedin: "https://linkedin.com/company/example-corp"
+    instagram: "@examplecorp"
+
+domains:
+  inbox: inbox.example-corp.com
+  atlas: atlas.example-corp.com
+  dashboard: dashboard.example-corp.com
+  n8n: n8n.example-corp.com
+
+email:
+  smtp:
+    host: smtp.gmail.com
+    port: 587
+    username: noreply@example-corp.com
+  from:
+    name: "Example Support"
+    email: noreply@example-corp.com
+  support_email: support@example-corp.com
+
+whatsapp:
+  provider: evolution-api
+  phone_number: "+55 11 98765-4321"
+  display_name: "Example Support"
+
+ai:
+  qualification:
+    threshold: 7
+    auto_handoff: true
+  openai:
+    model: gpt-4-turbo-preview
+    temperature: 0.7
+    max_tokens: 500
+
+features:
+  enable_account_signup: false
+  enable_voice: true
+  enable_analytics: true
+  enable_auto_followup: true
+
+deployment:
+  server:
+    provider: digitalocean
+    region: nyc3
+    size: s-2vcpu-4gb
+  backup:
+    enabled: true
+    schedule: "0 2 * * *"
+    retention_days: 30
+    destination: digitalocean-spaces
+
+team:
+  - name: "Admin User"
+    email: admin@example-corp.com
+    role: administrator
+  - name: "Sarah Johnson"
+    email: sarah@example-corp.com
+    role: agent
+  - name: "Mike Williams"
+    email: mike@example-corp.com
+    role: agent
+
+notes: |
+  Example Corporation is a test client for validating the deployment process.
+  This configuration demonstrates all available options.
+
+  Deployment date: TBD
+  Contract type: Annual subscription
+  Special requirements: Voice messages enabled

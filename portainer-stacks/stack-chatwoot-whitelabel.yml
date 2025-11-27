@@ -1,0 +1,166 @@
+version: "3.7"
+
+# ============================================
+# CHATWOOT WHITE-LABEL
+# ============================================
+# Esta stack substitui sua stack atual do Chatwoot
+# Permite customizar branding via variáveis de ambiente
+#
+# VARIÁVEIS OBRIGATÓRIAS (adicionar no Portainer):
+# - BRAND_NAME (ex: "Nexa Inbox" ou "Cliente ABC")
+# - BRAND_LOGO_URL (ex: "https://cdn.exemplo.com/logo.svg")
+# - BRAND_PRIMARY_COLOR (ex: "#1f93ff")
+# - CHATWOOT_DOMAIN (ex: "inbox.nexateam.com.br")
+#
+# VARIÁVEIS OPCIONAIS:
+# - CHATWOOT_API_TOKEN (gerar depois do primeiro login)
+# ============================================
+
+services:
+  chatwoot_app:
+    image: ${CHATWOOT_IMAGE:-nexateam/chatwoot-custom:latest}
+    command: bundle exec rails s -p 3000 -b 0.0.0.0
+    entrypoint: docker/entrypoints/rails.sh
+    volumes:
+      - chatwoot_data:/app/storage
+    networks:
+      - minha_rede
+    environment:
+      # Installation
+      - INSTALLATION_NAME=${INSTALLATION_NAME:-nexa_inbox}
+      - NODE_ENV=production
+      - RAILS_ENV=production
+      - INSTALLATION_ENV=docker
+
+      # Security
+      - SECRET_KEY_BASE=${SECRET_KEY_BASE:-N4HqZRHH9gzWbDOJBobLWiWpaM2Vw1Qt}
+      - FRONTEND_URL=https://${CHATWOOT_DOMAIN:-chatwoot.nexateam.com.br}
+      - FORCE_SSL=true
+      - ENABLE_ACCOUNT_SIGNUP=false
+
+      # White-Label Branding (CUSTOMIZE AQUI!)
+      - BRAND_NAME=${BRAND_NAME:-Nexa Inbox}
+      - BRAND_LOGO_URL=${BRAND_LOGO_URL}
+      - BRAND_PRIMARY_COLOR=${BRAND_PRIMARY_COLOR:-#1f93ff}
+      - SUPPORT_EMAIL=${SUPPORT_EMAIL:-support@nexateam.com.br}
+
+      # Database (usa seu Postgres existente)
+      - POSTGRES_HOST=postgres
+      - POSTGRES_USERNAME=postgres
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-KEqXBMXMU4sC44UV}
+      - POSTGRES_DATABASE=chatwoot
+      - POSTGRES_PORT=5432
+
+      # Redis (usa seu Redis existente)
+      - REDIS_URL=redis://redis:6379
+
+      # Locale
+      - DEFAULT_LOCALE=pt_BR
+
+      # Storage
+      - ACTIVE_STORAGE_SERVICE=local
+      - RAILS_LOG_TO_STDOUT=true
+      - USE_INBOX_AVATAR_FOR_BOT=true
+
+      # Email (SMTP)
+      - MAILER_SENDER_EMAIL=${BRAND_NAME:-Nexa Inbox} <${SMTP_USERNAME:-seuemail@gmail.com}>
+      - SMTP_DOMAIN=${SMTP_DOMAIN:-gmail.com}
+      - SMTP_ADDRESS=${SMTP_ADDRESS:-smtp.gmail.com}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USERNAME=${SMTP_USERNAME:-seuemail@gmail.com}
+      - SMTP_PASSWORD=${SMTP_PASSWORD:-suasenhadeapp}
+      - SMTP_AUTHENTICATION=login
+      - SMTP_ENABLE_STARTTLS_AUTO=true
+      - SMTP_OPENSSL_VERIFY_MODE=peer
+
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: "1"
+          memory: 1536M
+      labels:
+        - traefik.enable=true
+        - traefik.docker.network=minha_rede
+
+        # HTTPS Router
+        - traefik.http.routers.chatwoot_app.rule=Host(`${CHATWOOT_DOMAIN:-chatwoot.nexateam.com.br}`)
+        - traefik.http.routers.chatwoot_app.entrypoints=websecure
+        - traefik.http.routers.chatwoot_app.tls=true
+        - traefik.http.routers.chatwoot_app.tls.certresolver=le
+
+        # Service
+        - traefik.http.routers.chatwoot_app.service=chatwoot_app
+        - traefik.http.services.chatwoot_app.loadbalancer.server.port=3000
+        - traefik.http.services.chatwoot_app.loadbalancer.passHostHeader=true
+
+        # HTTP -> HTTPS Redirect
+        - traefik.http.routers.chatwoot_app_http.rule=Host(`${CHATWOOT_DOMAIN:-chatwoot.nexateam.com.br}`)
+        - traefik.http.routers.chatwoot_app_http.entrypoints=web
+        - traefik.http.routers.chatwoot_app_http.middlewares=redirect-to-https
+        - traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https
+
+  chatwoot_sidekiq:
+    image: ${CHATWOOT_IMAGE:-nexateam/chatwoot-custom:latest}
+    command: bundle exec sidekiq -C config/sidekiq.yml
+    volumes:
+      - chatwoot_data:/app/storage
+    networks:
+      - minha_rede
+    environment:
+      # Same env as chatwoot_app
+      - INSTALLATION_NAME=${INSTALLATION_NAME:-nexa_inbox}
+      - NODE_ENV=production
+      - RAILS_ENV=production
+      - INSTALLATION_ENV=docker
+      - SECRET_KEY_BASE=${SECRET_KEY_BASE:-N4HqZRHH9gzWbDOJBobLWiWpaM2Vw1Qt}
+      - FRONTEND_URL=https://${CHATWOOT_DOMAIN:-chatwoot.nexateam.com.br}
+      - POSTGRES_HOST=postgres
+      - POSTGRES_USERNAME=postgres
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-KEqXBMXMU4sC44UV}
+      - POSTGRES_DATABASE=chatwoot
+      - REDIS_URL=redis://redis:6379
+      - DEFAULT_LOCALE=pt_BR
+      - ACTIVE_STORAGE_SERVICE=local
+      - RAILS_LOG_TO_STDOUT=true
+      - BRAND_NAME=${BRAND_NAME:-Nexa Inbox}
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: "1"
+          memory: 1024M
+
+volumes:
+  chatwoot_data:
+    external: true
+    name: chatwoot_data
+
+networks:
+  minha_rede:
+    external: true
+    name: minha_rede
+
+# ============================================
+# COMO USAR:
+# ============================================
+# 1. Portainer → Stacks → chatwoot (sua stack atual) → Editor
+# 2. SUBSTITUIR todo o conteúdo por este arquivo
+# 3. Environment variables → Adicionar:
+#    BRAND_NAME=Seu Cliente
+#    BRAND_LOGO_URL=https://...
+#    BRAND_PRIMARY_COLOR=#ff0000
+#    CHATWOOT_DOMAIN=inbox.cliente.com
+# 4. Update the stack
+#
+# IMPORTANTE: Se ainda não tem a imagem customizada,
+# use chatwoot/chatwoot:v3.15.0 até buildar a custom
+# ============================================

@@ -1,0 +1,125 @@
+# Nexa AI Platform - Client Configuration Template
+# Copy this file to clients/client-name.yml and customize
+
+# ==========================================
+# CLIENT INFORMATION
+# ==========================================
+client:
+  id: client-abc                    # Unique identifier (lowercase, no spaces)
+  name: "Client ABC"                # Display name
+  domain: client-abc.com            # Primary domain
+  contact:
+    name: "John Doe"
+    email: "john@client-abc.com"
+    phone: "+55 11 99999-9999"
+
+# ==========================================
+# BRANDING
+# ==========================================
+branding:
+  name: "Client ABC Support"        # Application name shown in UI
+  tagline: "AI-Powered Customer Support"
+  logo:
+    url: "https://client-abc.com/logo.svg"
+    favicon: "https://client-abc.com/favicon.ico"
+    thumbnail: "https://client-abc.com/logo-small.png"  # For emails
+  colors:
+    primary: "#ff6600"              # Main brand color
+    secondary: "#4ecdc4"
+    success: "#44ce4b"
+    danger: "#ff0000"
+    warning: "#ffaa00"
+  social:
+    website: "https://client-abc.com"
+    linkedin: "https://linkedin.com/company/client-abc"
+    instagram: "@clientabc"
+
+# ==========================================
+# DOMAINS (Subdomains)
+# ==========================================
+domains:
+  inbox: inbox.client-abc.com       # Chatwoot (human support)
+  atlas: atlas.client-abc.com       # Atlas Nexa (AI SDR)
+  dashboard: dashboard.client-abc.com
+  n8n: n8n.client-abc.com
+
+# ==========================================
+# EMAIL (SMTP)
+# ==========================================
+email:
+  smtp:
+    host: smtp.gmail.com
+    port: 587
+    username: noreply@client-abc.com
+    # Password: set in secrets (not here!)
+  from:
+    name: "Client ABC Support"
+    email: noreply@client-abc.com
+  support_email: support@client-abc.com
+
+# ==========================================
+# WHATSAPP
+# ==========================================
+whatsapp:
+  provider: evolution-api           # Options: evolution-api, uazapi, meta-cloud
+  phone_number: "+55 11 99999-9999"
+  display_name: "Client ABC"
+  # API credentials: set in secrets
+
+# ==========================================
+# AI CONFIGURATION
+# ==========================================
+ai:
+  qualification:
+    threshold: 7                    # Minimum score to handoff to human (1-10)
+    auto_handoff: true              # Auto-create Chatwoot conversation
+  openai:
+    model: gpt-4-turbo-preview
+    temperature: 0.7
+    max_tokens: 500
+  # API keys: set in secrets
+
+# ==========================================
+# FEATURE FLAGS
+# ==========================================
+features:
+  enable_account_signup: false      # Only admins can create accounts
+  enable_voice: false               # ElevenLabs voice messages
+  enable_analytics: true            # Dashboard metrics
+  enable_auto_followup: true        # Atlas Nexa auto-follow-up
+
+# ==========================================
+# DEPLOYMENT
+# ==========================================
+deployment:
+  server:
+    provider: digitalocean          # Options: digitalocean, aws, azure
+    region: nyc3
+    size: s-2vcpu-4gb               # 2 vCPU, 4GB RAM
+  backup:
+    enabled: true
+    schedule: "0 2 * * *"           # Daily at 2 AM
+    retention_days: 30
+    destination: digitalocean-spaces
+
+# ==========================================
+# TEAM (Initial Setup)
+# ==========================================
+team:
+  - name: "Admin User"
+    email: admin@client-abc.com
+    role: administrator
+  - name: "Agent 1"
+    email: agent1@client-abc.com
+    role: agent
+  - name: "Agent 2"
+    email: agent2@client-abc.com
+    role: agent
+
+# ==========================================
+# NOTES
+# ==========================================
+notes: |
+  - Deployment date: 2025-11-06
+  - Contract: Annual subscription
+  - Support: Nexa Team (support@nexateam.com.br)

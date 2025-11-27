@@ -1,0 +1,125 @@
+version: "3.7"
+
+# ============================================
+# ATLAS NEXA - AI SDR AGENT
+# ============================================
+# SDR com IA que qualifica leads automaticamente
+# e faz handoff para Chatwoot quando score >= 7
+#
+# VARIÁVEIS OBRIGATÓRIAS (adicionar no Portainer):
+# - OPENAI_API_KEY (ex: "sk-...")
+# - WHATSAPP_API_URL (ex: "https://evolution.nexateam.com.br")
+# - WHATSAPP_API_KEY
+# - CHATWOOT_API_TOKEN (gerar depois no Chatwoot)
+# - ATLAS_DOMAIN (ex: "atlas.nexateam.com.br")
+#
+# OPCIONAL:
+# - QUALIFICATION_THRESHOLD (default: 7)
+# ============================================
+
+services:
+  atlas_nexa:
+    image: ${ATLAS_IMAGE:-nexateam/atlas-nexa:latest}
+    volumes:
+      - atlas_data:/app/storage
+    networks:
+      - minha_rede
+    environment:
+      # Database (usa seu Postgres, mas database diferente)
+      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD:-KEqXBMXMU4sC44UV}@postgres:5432/atlas_nexa
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-KEqXBMXMU4sC44UV}
+      - POSTGRES_DATABASE=atlas_nexa
+
+      # Redis (usa seu Redis, mas db 1)
+      - REDIS_URL=redis://redis:6379/1
+
+      # AI Services (PREENCHER!)
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4-turbo-preview}
+      - GOOGLE_AI_API_KEY=${GOOGLE_AI_API_KEY}
+      - ELEVENLABS_API_KEY=${ELEVENLABS_API_KEY}
+
+      # WhatsApp API (PREENCHER!)
+      - WHATSAPP_API_URL=${WHATSAPP_API_URL}
+      - WHATSAPP_API_KEY=${WHATSAPP_API_KEY}
+      - WHATSAPP_PHONE_ID=${WHATSAPP_PHONE_ID}
+
+      # Integration with Chatwoot
+      - CHATWOOT_API_URL=https://${CHATWOOT_DOMAIN:-chatwoot.nexateam.com.br}/api/v1
+      - CHATWOOT_API_TOKEN=${CHATWOOT_API_TOKEN}
+      - CHATWOOT_ACCOUNT_ID=${CHATWOOT_ACCOUNT_ID:-1}
+      - CHATWOOT_INBOX_ID=${CHATWOOT_INBOX_ID:-1}
+
+      # N8N Webhooks (se usar N8N)
+      - N8N_WEBHOOK_URL=${N8N_URL:-https://n8n.nexateam.com.br}/webhook
+      - HANDOFF_WEBHOOK_URL=${N8N_URL:-https://n8n.nexateam.com.br}/webhook/atlas-qualified-lead
+
+      # Qualification Settings
+      - QUALIFICATION_THRESHOLD=${QUALIFICATION_THRESHOLD:-7}
+      - AUTO_HANDOFF_ENABLED=${AUTO_HANDOFF_ENABLED:-true}
+
+      # Locale
+      - TZ=America/Sao_Paulo
+      - LANG=pt_BR.UTF-8
+
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: "1"
+          memory: 1024M
+      labels:
+        - traefik.enable=true
+        - traefik.docker.network=minha_rede
+
+        # HTTPS Router
+        - traefik.http.routers.atlas.rule=Host(`${ATLAS_DOMAIN:-atlas.nexateam.com.br}`)
+        - traefik.http.routers.atlas.entrypoints=websecure
+        - traefik.http.routers.atlas.tls=true
+        - traefik.http.routers.atlas.tls.certresolver=le
+
+        # Service
+        - traefik.http.routers.atlas.service=atlas
+        - traefik.http.services.atlas.loadbalancer.server.port=4000
+
+volumes:
+  atlas_data:
+    external: true
+    name: atlas_data
+
+networks:
+  minha_rede:
+    external: true
+    name: minha_rede
+
+# ============================================
+# IMPORTANTE - PRIMEIRO LOGIN NO CHATWOOT:
+# ============================================
+# Antes de fazer deploy do Atlas Nexa:
+#
+# 1. Fazer login no Chatwoot
+# 2. Settings → Integrations → API → Platform
+# 3. Create Token → copiar
+# 4. Voltar no Portainer:
+#    Environment variables → CHATWOOT_API_TOKEN=...
+# 5. Deploy this stack
+#
+# ============================================
+# CRIAR DATABASE MANUALMENTE (PRIMEIRA VEZ):
+# ============================================
+# SSH no servidor:
+# docker exec -it <postgres_container> psql -U postgres
+# CREATE DATABASE atlas_nexa;
+# \q
+#
+# Ou via Portainer:
+# Postgres container → Console → psql -U postgres
+# CREATE DATABASE atlas_nexa;
+# ============================================

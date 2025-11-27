@@ -1,0 +1,215 @@
+# Nexa AI Platform - Git Ignore
+
+# ==========================================
+# SECRETS AND SENSITIVE DATA
+# ==========================================
+
+# Environment files (contain passwords, API keys)
+.env
+.env.*
+!.env.template
+!.env.example
+
+# Client configurations (may contain sensitive data)
+clients/*.yml
+!clients/example-corp.yml
+
+# Generated deployment files (contain secrets)
+generated/
+
+# Backup files (may contain database dumps)
+*.sql
+*.sql.gz
+*.dump
+*.rdb
+
+# SSH keys
+*.pem
+*.key
+id_rsa*
+id_ed25519*
+
+# SSL certificates (if not using Traefik)
+*.crt
+*.cert
+*.cer
+*.p12
+*.pfx
+
+# ==========================================
+# DOCKER
+# ==========================================
+
+# Docker Compose override (local development)
+docker-compose.override.yml
+
+# Docker volumes (local data)
+postgres_data/
+redis_data/
+chatwoot_storage/
+atlas_storage/
+n8n-data/
+letsencrypt/
+
+# Docker build context
+.dockerignore
+
+# ==========================================
+# LOGS
+# ==========================================
+
+# Application logs
+*.log
+logs/
+*.log.*
+
+# Docker logs
+docker-compose.log
+
+# ==========================================
+# TEMPORARY FILES
+# ==========================================
+
+# OS-specific
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.bak
+*.tmp
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv/
+
+# Node.js (if building frontend locally)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn
+
+# ==========================================
+# BUILD ARTIFACTS
+# ==========================================
+
+# Docker images (don't commit built images)
+*.tar
+*.tar.gz
+
+# Chatwoot custom build
+chatwoot-custom/tmp/
+chatwoot-custom/log/
+chatwoot-custom/public/packs/
+chatwoot-custom/public/assets/
+chatwoot-custom/.bundle/
+
+# ==========================================
+# DOCUMENTATION BUILD
+# ==========================================
+
+# Compiled documentation (if using mkdocs, sphinx, etc.)
+site/
+_build/
+.doctrees/
+
+# ==========================================
+# CLIENT-SPECIFIC FILES
+# ==========================================
+
+# Client assets (logos, branding)
+branding/client-*/
+
+# Client-specific docker-compose files
+docker-compose.*.yml
+!docker-compose.nexa-platform.yml
+
+# ==========================================
+# TESTING & DEVELOPMENT
+# ==========================================
+
+# Test databases
+test-db/
+*.db
+*.sqlite
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+
+# Pytest
+.pytest_cache/
+.tox/
+
+# ==========================================
+# CI/CD
+# ==========================================
+
+# GitHub Actions (if needed)
+# .github/workflows/*.yml (uncomment if you want to ignore)
+
+# Terraform state (if using)
+*.tfstate
+*.tfstate.*
+.terraform/
+
+# Ansible (if using)
+*.retry
+
+# ==========================================
+# BACKUP FILES
+# ==========================================
+
+# Automated backups
+backups/
+*.backup
+
+# ==========================================
+# CUSTOM NEXA PLATFORM
+# ==========================================
+
+# Generated client configurations
+generated/
+
+# Client secrets vault
+.secrets/
+secrets/
+
+# Local overrides
+local/
+*.local
+
+# ==========================================
+# ALLOW CERTAIN FILES
+# ==========================================
+
+# Templates should be committed
+!templates/*.yml
+
+# Example client should be committed
+!clients/example-corp.yml
+
+# Documentation should be committed
+!docs/*.md
+!*.md
+
+# Scripts should be committed
+!scripts/*.sh
+!scripts/*.py
