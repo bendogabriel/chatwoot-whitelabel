@@ -21,8 +21,8 @@ RUN sed -i 's/\r$//' /tmp/apply-whitelabel.sh && \
 # Cleanup (Permissions are handled inside the script now)
 RUN rm -rf /app/branding /tmp/apply-whitelabel.sh
 
-# Switch back to chatwoot user for security
-USER chatwoot
+# Switch back to non-root user (using ID 1001 to avoid name resolution issues)
+USER 1001
 
 # Expose port
 EXPOSE 3000

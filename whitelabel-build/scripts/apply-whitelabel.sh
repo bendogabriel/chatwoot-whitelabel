@@ -98,19 +98,14 @@ safe_replace "public/packs" "Chatwoot" "$BRAND_NAME" "*.js"
 safe_replace "public/assets" "Chatwoot" "$BRAND_NAME" "*.js"
 
 # 7. RESTORE PERMISSIONS
-# We are running as root, so we need to give files back to the app user.
-echo "  🔒 Restoring permissions..."
-if [ -n "$APP_USER" ]; then
-  echo "  Changing ownership back to $APP_USER..."
-  chown -R "$APP_USER" app/javascript/dashboard/i18n
-  chown -R "$APP_USER" app/javascript/dashboard/assets
-  chown -R "$APP_USER" public
-  chown -R "$APP_USER" app/views/mailers
-  chown -R "$APP_USER" app/views/layouts
-  [ -f package.json ] && chown "$APP_USER" package.json
-else
-  echo "  ⚠️ Could not detect app user, skipping chown."
-fi
+# We force ownership to user ID 1001 (standard non-root) to match Dockerfile
+echo "  🔒 Restoring permissions to User 1001..."
+chown -R 1001:0 app/javascript/dashboard/i18n
+chown -R 1001:0 app/javascript/dashboard/assets
+chown -R 1001:0 public
+chown -R 1001:0 app/views/mailers
+chown -R 1001:0 app/views/layouts
+[ -f package.json ] && chown 1001:0 package.json
 
 echo "✅ Premium White-Label applied successfully!"
 echo "Brand: ${BRAND_NAME}"
