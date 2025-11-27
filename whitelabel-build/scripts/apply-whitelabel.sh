@@ -48,24 +48,36 @@ echo "  🖼️  Replacing images..."
 mkdir -p app/javascript/dashboard/assets/images
 mkdir -p public
 
-# Function to copy if exists
+# Function to copy if exists (supports PNG and SVG)
 copy_asset() {
-  src=$1
-  dest=$2
-  if [ -f "$src" ]; then
+  base_src=$1  # e.g. "branding/assets/logo" (without extension)
+  dest=$2      # e.g. "app/javascript/dashboard/assets/images/logo.svg"
+  
+  # Try to find the file with .svg, .png, or .ico extension
+  src=""
+  for ext in svg png ico; do
+    if [ -f "${base_src}.${ext}" ]; then
+      src="${base_src}.${ext}"
+      break
+    fi
+  done
+  
+  if [ -n "$src" ]; then
     cp -v "$src" "$dest"
+    echo "  ✓ Copied $src to $dest"
     # Also copy to public/packs if it exists (compiled assets)
     if [ -d "public/packs" ]; then
       find public/packs -name "$(basename $dest)" -exec cp -v "$src" {} +
     fi
   else
-    echo "  ⚠️ Asset not found: $src"
+    echo "  ⚠️ Asset not found: ${base_src}.{svg,png,ico}"
   fi
 }
 
-copy_asset "branding/assets/logo.svg" "app/javascript/dashboard/assets/images/logo.svg"
-copy_asset "branding/assets/logo-dark.svg" "app/javascript/dashboard/assets/images/logo-dark.svg"
-copy_asset "branding/assets/favicon.ico" "public/favicon.ico"
+# Copy logos (will auto-detect .svg or .png)
+copy_asset "branding/assets/logo" "app/javascript/dashboard/assets/images/logo.svg"
+copy_asset "branding/assets/logo-dark" "app/javascript/dashboard/assets/images/logo-dark.svg"
+copy_asset "branding/assets/favicon" "public/favicon.ico"
 
 # 4. Update HTML Layout (Title & Meta)
 echo "  🌐 Updating HTML layout..."
