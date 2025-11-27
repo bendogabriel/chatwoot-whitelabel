@@ -19,7 +19,7 @@ ARG PRIMARY_COLOR="#1f93ff"
 ENV BRAND_NAME=$BRAND_NAME
 ENV PRIMARY_COLOR=$PRIMARY_COLOR
 
-RUN /tmp/apply-whitelabel.sh
+RUN sh /tmp/apply-whitelabel.sh
 
 # Precompile assets with custom branding
 ENV RAILS_ENV=production
