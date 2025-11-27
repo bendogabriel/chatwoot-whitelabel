@@ -31,6 +31,10 @@ ENV SECRET_KEY_BASE=dummy-secret-for-asset-compilation
 # RUN bundle install
 # RUN yarn install
 
+# Re-install dependencies because they might be missing in the production image
+RUN bundle config set --local without 'development test' && bundle install
+RUN yarn install
+
 RUN bundle exec rails assets:precompile
 
 # Final stage: Clean production image
