@@ -43,41 +43,69 @@ else
   echo "  ⚠️ package.json not found"
 fi
 
-# 3. Copy branding assets (Images)
-echo "  🖼️  Replacing images..."
-mkdir -p app/javascript/dashboard/assets/images
-mkdir -p public
+# 3. Replace branding assets in COMPILED location (public/packs)
+echo "  🖼️  Replacing compiled logos..."
 
-# Function to copy if exists (supports PNG and SVG)
-copy_asset() {
-  base_src=$1  # e.g. "branding/assets/logo" (without extension)
-  dest=$2      # e.g. "app/javascript/dashboard/assets/images/logo.svg"
+# Function to replace compiled assets (finds files by pattern and replaces them)
+replace_compiled_asset() {
+  asset_file=$1     # e.g. "branding/assets/logo.png"
+  search_pattern=$2 # e.g. "logo*.svg" or "logo-dark*.svg"
   
-  # Try to find the file with .svg, .png, or .ico extension
-  src=""
-  for ext in svg png ico; do
-    if [ -f "${base_src}.${ext}" ]; then
-      src="${base_src}.${ext}"
-      break
-    fi
-  done
+  if [ ! -f "$asset_file" ]; then
+    echo "  ⚠️ Asset not found: $asset_file (skipping)"
+    return
+  fi
   
-  if [ -n "$src" ]; then
-    cp -v "$src" "$dest"
-    echo "  ✓ Copied $src to $dest"
-    # Also copy to public/packs if it exists (compiled assets)
-    if [ -d "public/packs" ]; then
-      find public/packs -name "$(basename $dest)" -exec cp -v "$src" {} +
+  # Find and replace in public/packs (compiled Webpack assets)
+  if [ -d "public/packs" ]; then
+    found=0
+    for compiled_file in public/packs/$search_pattern; do
+      if [ -f "$compiled_file" ]; then
+        cp -v "$asset_file" "$compiled_file"
+        echo "  ✅ Replaced: $compiled_file"
+        found=1
+      fi
+    done
+    
+    if [ $found -eq 0 ]; then
+      echo "  ⚠️ No compiled files matching '$search_pattern' found in public/packs"
     fi
   else
-    echo "  ⚠️ Asset not found: ${base_src}.{svg,png,ico}"
+    echo "  ⚠️ public/packs directory not found"
+  fi
+  
+  # Also replace in source (for future builds)
+  if [ -d "app/javascript/dashboard/assets/images" ]; then
+    base_name=$(basename "$search_pattern" | sed 's/\*//g')
+    cp -v "$asset_file" "app/javascript/dashboard/assets/images/$base_name" 2>/dev/null || true
   fi
 }
 
-# Copy logos (will auto-detect .svg or .png)
-copy_asset "branding/assets/logo" "app/javascript/dashboard/assets/images/logo.svg"
-copy_asset "branding/assets/logo-dark" "app/javascript/dashboard/assets/images/logo-dark.svg"
-copy_asset "branding/assets/favicon" "public/favicon.ico"
+# Find custom logo (PNG or SVG)
+for ext in png svg; do
+  if [ -f "branding/assets/logo.$ext" ]; then
+    replace_compiled_asset "branding/assets/logo.$ext" "logo*.svg"
+    replace_compiled_asset "branding/assets/logo.$ext" "logo*.png"
+    break
+  fi
+done
+
+# Find custom dark logo (PNG or SVG)
+for ext in png svg; do
+  if [ -f "branding/assets/logo-dark.$ext" ]; then
+    replace_compiled_asset "branding/assets/logo-dark.$ext" "logo-dark*.svg"
+    replace_compiled_asset "branding/assets/logo-dark.$ext" "logo-dark*.png"
+    break
+  fi
+done
+
+# Favicon
+for ext in ico png; do
+  if [ -f "branding/assets/favicon.$ext" ]; then
+    [ -f "public/favicon.ico" ] && cp -v "branding/assets/favicon.$ext" "public/favicon.ico"
+    break
+  fi
+done
 
 # 4. Update HTML Layout (Title & Meta)
 echo "  🌐 Updating HTML layout..."
