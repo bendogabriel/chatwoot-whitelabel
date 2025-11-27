@@ -105,6 +105,8 @@ chown -R 1001:0 app/javascript/dashboard/assets
 chown -R 1001:0 public
 chown -R 1001:0 app/views/mailers
 chown -R 1001:0 app/views/layouts
+chown -R 1001:0 tmp
+chown -R 1001:0 log
 [ -f package.json ] && chown 1001:0 package.json
 
 echo "✅ Premium White-Label applied successfully!"
