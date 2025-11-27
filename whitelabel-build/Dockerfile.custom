@@ -1,65 +1,28 @@
 # Use official Chatwoot base image
-FROM chatwoot/chatwoot:v3.15.0 as base
+FROM chatwoot/chatwoot:v3.15.0
 
-# Build stage: Apply customizations
-FROM base as builder
-
-WORKDIR /app
-
-# Copy branding files
-COPY branding/ /app/branding/
-
-# Copy customization script
-COPY scripts/apply-whitelabel.sh /tmp/apply-whitelabel.sh
-RUN sed -i 's/\r$//' /tmp/apply-whitelabel.sh && chmod +x /tmp/apply-whitelabel.sh
-
-# Apply white-label customizations
-ARG BRAND_NAME="Nexa Inbox"
-ARG PRIMARY_COLOR="#1f93ff"
-ENV BRAND_NAME=$BRAND_NAME
-ENV PRIMARY_COLOR=$PRIMARY_COLOR
-
-RUN sh /tmp/apply-whitelabel.sh
-
-# Precompile assets with custom branding
+# Set environment variables
 ENV RAILS_ENV=production
 ENV NODE_ENV=production
-ENV SECRET_KEY_BASE=dummy-secret-for-asset-compilation
 
-# Note: We skip bundle install/yarn install assuming the base image has everything needed
-# If new dependencies are added, uncomment below:
-# RUN bundle install
-# RUN yarn install
+# Copy customization script and assets
+COPY scripts/apply-whitelabel.sh /tmp/apply-whitelabel.sh
+COPY branding/ /app/branding/
 
+# Switch to root to perform modifications
 USER root
 
-# Install system dependencies required for building assets
-# Checks if apk (Alpine) or apt (Debian) is available
-RUN if [ -f /etc/alpine-release ]; then \
-    apk add --no-cache git nodejs yarn build-base python3; \
-    else \
-    apt-get update && apt-get install -y git nodejs npm build-essential python3 && \
-    npm install -g yarn; \
-    fi
+# Run the customization script
+# We use 'sh' explicitly and ensure line endings are correct
+RUN sed -i 's/\r$//' /tmp/apply-whitelabel.sh && \
+    chmod +x /tmp/apply-whitelabel.sh && \
+    sh /tmp/apply-whitelabel.sh
 
-# Re-install dependencies because they might be missing in the production image
-RUN bundle config set --local without 'development test' && bundle install
-RUN yarn install
+# Cleanup
+RUN rm -rf /app/branding /tmp/apply-whitelabel.sh
 
-RUN bundle exec rails assets:precompile
-
-# Final stage: Clean production image
-FROM base
-
-WORKDIR /app
-
-# Copy customized app from builder
-COPY --from=builder /app /app
-
-# Remove unnecessary files
-RUN rm -rf /app/branding \
-    /app/scripts/apply-whitelabel.sh \
-    /tmp/*
+# Switch back to chatwoot user for security
+USER chatwoot
 
 # Expose port
 EXPOSE 3000
