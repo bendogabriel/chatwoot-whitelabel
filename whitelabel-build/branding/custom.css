@@ -1,0 +1,46 @@
+/* Nexa Inbox - Custom Branding CSS */
+
+/* Hide original Chatwoot logo */
+.logo-image,
+.login--hero__logo img,
+.app-logo img {
+    opacity: 0 !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+
+/* Replace with custom logo using CSS background */
+.logo-image::before,
+.login--hero__logo::before,
+.app-logo::before {
+    content: "Nexa Inbox" !important;
+    font-size: 24px;
+    font-weight: 700;
+    color: #1f93ff;
+    display: block;
+    opacity: 1 !important;
+}
+
+/* Alternative: If you want to use an image URL */
+/*
+.logo-image,
+.login--hero__logo,
+.app-logo {
+  background-image: url('YOUR_LOGO_URL_HERE') !important;
+  background-size: contain !important;
+  background-repeat: no-repeat !important;
+  width: 180px !important;
+  height: 40px !important;
+}
+*/
+
+/* Custom primary color */
+.button--primary,
+.bg-woot {
+    background-color: #1f93ff !important;
+}
+
+a,
+.link {
+    color: #1f93ff !important;
+}

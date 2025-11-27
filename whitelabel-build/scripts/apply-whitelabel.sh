@@ -107,15 +107,36 @@ for ext in ico png; do
   fi
 done
 
-# 4. Update HTML Layout (Title & Meta)
+# 4. Inject Custom CSS
+echo "  🎨 Injecting custom CSS..."
+if [ -f "branding/custom.css" ]; then
+  # Find the main application layout
+  if [ -f "app/views/layouts/vueapp.html.erb" ]; then
+    # Inject CSS link before </head>
+    if ! grep -q "custom-branding.css" "app/views/layouts/vueapp.html.erb"; then
+      sed -i 's|</head>|<style><%= File.read(Rails.root.join("public", "custom-branding.css")) rescue "" %></style>\n</head>|' "app/views/layouts/vueapp.html.erb"
+    fi
+    # Copy CSS to public folder
+    cp -v branding/custom.css public/custom-branding.css
+    echo "  ✅ Custom CSS injected"
+  else
+    echo "  ⚠️ Layout file not found"
+  fi
+else
+  echo "  ⚠️ custom.css not found in branding/"
+fi
+
+# 5. Update HTML Layout (Title & Meta)
 echo "  🌐 Updating HTML layout..."
 LAYOUT_FILE="app/views/layouts/application.html.erb"
 if [ -f "$LAYOUT_FILE" ]; then
   sed -i "s|<title>Chatwoot</title>|<title>${BRAND_NAME}</title>|" "$LAYOUT_FILE"
   sed -i "s|content=\"Chatwoot\"|content=\"${BRAND_NAME}\"|" "$LAYOUT_FILE"
+else
+  echo "  ⚠️ Layout file not found: $LAYOUT_FILE"
 fi
 
-# 5. DIRECT REPLACEMENT: CSS Colors
+# 6. DIRECT REPLACEMENT: CSS Colors
 # Instead of recompiling, we find the compiled CSS and replace the hex code.
 echo "  🎨 Injecting custom colors into compiled CSS..."
 
