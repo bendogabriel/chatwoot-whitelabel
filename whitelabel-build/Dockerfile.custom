@@ -31,6 +31,17 @@ ENV SECRET_KEY_BASE=dummy-secret-for-asset-compilation
 # RUN bundle install
 # RUN yarn install
 
+USER root
+
+# Install system dependencies required for building assets
+# Checks if apk (Alpine) or apt (Debian) is available
+RUN if [ -f /etc/alpine-release ]; then \
+    apk add --no-cache git nodejs yarn build-base python3; \
+    else \
+    apt-get update && apt-get install -y git nodejs npm build-essential python3 && \
+    npm install -g yarn; \
+    fi
+
 # Re-install dependencies because they might be missing in the production image
 RUN bundle config set --local without 'development test' && bundle install
 RUN yarn install
