@@ -18,9 +18,8 @@ RUN sed -i 's/\r$//' /tmp/apply-whitelabel.sh && \
     chmod +x /tmp/apply-whitelabel.sh && \
     sh /tmp/apply-whitelabel.sh
 
-# Cleanup and restore permissions
-RUN rm -rf /app/branding /tmp/apply-whitelabel.sh && \
-    chown -R chatwoot:chatwoot /app
+# Cleanup (Permissions are handled inside the script now)
+RUN rm -rf /app/branding /tmp/apply-whitelabel.sh
 
 # Switch back to chatwoot user for security
 USER chatwoot

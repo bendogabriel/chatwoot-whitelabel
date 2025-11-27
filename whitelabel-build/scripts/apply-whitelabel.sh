@@ -10,6 +10,11 @@ BRAND_NAME="${BRAND_NAME:-Nexa Inbox}"
 PRIMARY_COLOR="${PRIMARY_COLOR:-#1f93ff}"
 DEFAULT_CHATWOOT_COLOR="#1f93ff"
 
+# Detect App User (to restore permissions later)
+# We look at who owns the config.ru file
+APP_USER=$(ls -ld config.ru | awk '{print $3}')
+echo "Detected App User: $APP_USER"
+
 # Helper function to safely replace text
 safe_replace() {
   dir=$1
@@ -91,6 +96,21 @@ fi
 echo "  🔤 Injecting brand name into compiled JS..."
 safe_replace "public/packs" "Chatwoot" "$BRAND_NAME" "*.js"
 safe_replace "public/assets" "Chatwoot" "$BRAND_NAME" "*.js"
+
+# 7. RESTORE PERMISSIONS
+# We are running as root, so we need to give files back to the app user.
+echo "  🔒 Restoring permissions..."
+if [ -n "$APP_USER" ]; then
+  echo "  Changing ownership back to $APP_USER..."
+  chown -R "$APP_USER" app/javascript/dashboard/i18n
+  chown -R "$APP_USER" app/javascript/dashboard/assets
+  chown -R "$APP_USER" public
+  chown -R "$APP_USER" app/views/mailers
+  chown -R "$APP_USER" app/views/layouts
+  [ -f package.json ] && chown "$APP_USER" package.json
+else
+  echo "  ⚠️ Could not detect app user, skipping chown."
+fi
 
 echo "✅ Premium White-Label applied successfully!"
 echo "Brand: ${BRAND_NAME}"
